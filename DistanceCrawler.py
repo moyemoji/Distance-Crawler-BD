@@ -8,13 +8,19 @@ import os,sys
 class DistanceCrawler:
     """
     __init__: 构造函数
+    :param tempate_path: 模板地址
+    :param result_temp: 结果缓存，用于对比前后两次结果是否发生变化
+    :param browser: 一个浏览器对象，用于模拟用户操作
     """
     def __init__(self):
         print("------init the crawler------")
         base_path = os.path.split(os.path.realpath(__file__))[0]
         base_path = base_path.replace('\\', '/')
         self.template_path =  'file:///'+ base_path + '/index.html'
-        self.browser = webdriver.Chrome()
+        self.result_temp = ''
+        opt = webdriver.ChromeOptions()
+        opt.set_headless()
+        self.browser = webdriver.Chrome(options=opt)
         self.browser.get(self.template_path)
         print("------init the crawler, done------")
 
@@ -39,8 +45,10 @@ class DistanceCrawler:
         elem_data.send_keys(query_json_str)
         elem_btn.click()
         val_result = elem_result.get_attribute("value")
-        while val_result == '' or val_result is None:
+        # 判断结果输入框不为空且同上次结果相比已经发生了变化
+        while val_result == '' or val_result is None or val_result == self.result_temp:
             val_result = elem_result.get_attribute("value")
+        self.result_temp = val_result
         return json.dumps(val_result)
 
     """
